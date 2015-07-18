@@ -14,20 +14,23 @@ trait Backoff
      * @param array $args Arguments to pass to the $callable.
      * @param int $attempts Number of retries.
      * @param array $exceptionFqns List of exception FQNs to retry on, if empty will retry on any exception.
-     * @param int $wait Microseconds to wait before invoking function.
+     * @param int $wait μs to wait before first retry. By default, initial wait (after first try) is 1000μs.
+     *
      * @throws \Exception
      *
      * @return mixed
      */
-    protected function backoffOnException(callable $callable, array $args, $attempts, array $exceptionFqns = [], $wait = 0)
+    protected function backoffOnException(callable $callable, array $args, $attempts, array $exceptionFqns = [], $wait = 1000)
     {
         try {
-            usleep($wait);
 
             return $callable(...$args);
+
         } catch (\Exception $e) {
 
             if ($attempts > 1 && (empty($exceptionFqns) || in_array(get_class($e), $exceptionFqns))) {
+                usleep($wait);
+
                 return $this->backoffOnException($callable, $args, $attempts - 1, $exceptionFqns, $this->increaseWaitTime($wait));
             }
 
@@ -46,15 +49,16 @@ trait Backoff
      * @param array $args Arguments to pass to the $callable.
      * @param int $attempts Number of retries.
      * @param callable $condition If returns true then current result returned by $callable will be returned, will retry otherwise.
-     * @param int $wait
+     * @param int $wait μs to wait before first retry. By default, initial wait (after first try) is 1000μs.
      *
      * @return mixed
      */
-    protected function backoffOnCondition(callable $callable, array $args, $attempts, callable $condition, $wait = 0)
+    protected function backoffOnCondition(callable $callable, array $args, $attempts, callable $condition, $wait = 1000)
     {
-        usleep($wait);
         $result = $callable(...$args);
         if ($attempts > 1 && $condition($result) !== true) {
+            usleep($wait);
+
             return $this->backoffOnCondition($callable, $args, $attempts - 1, $condition, $this->increaseWaitTime($wait));
         }
 
@@ -69,6 +73,7 @@ trait Backoff
     private function increaseWaitTime($wait)
     {
         if ($wait === 0) {
+
             return 1000;
         }
 
