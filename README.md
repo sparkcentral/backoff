@@ -2,6 +2,8 @@
 
 Simple utility trait which provides backoff / retry functionality.
 
+[![Build Status](https://travis-ci.org/sparkcentral/backoff.svg?branch=master)](https://travis-ci.org/sparkcentral/backoff)
+
 ## Features
 
 * Two different strategies: `backoffOnException`, `backoffOnCondition`
@@ -10,6 +12,10 @@ Simple utility trait which provides backoff / retry functionality.
 * Retries happen with delays which grow linearly (y=x*2), you can pass custom starting delay as well.
 
 For details please refer to documentation for `backoffOnException()`, `backoffOnCondition()` methods.
+
+## Dependencies
+
+* PHP >= 5.6 (variadics)
 
 ## Basic example
 
