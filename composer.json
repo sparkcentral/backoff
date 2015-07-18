@@ -1,6 +1,6 @@
 {
     "name": "sparkcentral/backoff",
-    "description": "Utility trait with retry (backoff) functionality",
+    "description": "Utility trait with retry (back off) functionality",
     "license": "MIT",
     "authors": [
         {
