@@ -90,6 +90,40 @@ class BackoffTest extends \PHPUnit_Framework_TestCase
         $this->assertGreaterThan(31, $diffInMsecs); // linear growth (y=x*2) will give 31msec of delays after 6 attempts
     }
 
+    public function testItBacksOffOnExceptionCondition()
+    {
+        $action = function() {
+            static $c = 1;
+            while ($c < 6) {
+                $c++;
+                throw new \DomainException("", 3);
+            }
+
+            return $c;
+        };
+
+        $condition = function($exception) { return $exception->getCode() == 3; };
+
+        $start = microtime(true);
+        $this->backoffOnExceptionCondition($action, [], 6, $condition);
+        $end = microtime(true);
+        $diffInMsecs = ($end - $start) * 1000;
+        $this->assertGreaterThan(31, $diffInMsecs); // linear growth (y=x*2) will give 31msec of delays after 6 attempts
+    }
+
+    public function testItRethrowsExceptionBaseOnCondition()
+    {
+        $action = function() {
+            throw new \DomainException("", 2);
+        };
+
+        $condition = function($exception) { return $exception->getCode() == 3; };
+
+        $this->setExpectedException(\DomainException::class, "", 2);
+        $this->backoffOnExceptionCondition($action, [], 6, $condition);
+    }
+
+
     public function testItBacksOffOnCondition()
     {
         $action = function() {

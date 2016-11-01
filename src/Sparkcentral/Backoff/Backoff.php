@@ -66,6 +66,38 @@ trait Backoff
     }
 
     /**
+     * Tries to invoke $callable the number of times specified by $attempts. Backs off / retries when
+     * exception is thrown that matches the callable condition.
+     *
+     * @param callable $callable Callable to execute.
+     * @param array $args Arguments to pass to the $callable.
+     * @param int $attempts Number of retries.
+     * @param callable $condition Callable that takes the exception and returns true when it should backoff
+     * @param int $wait μs to wait before first retry. By default, initial wait (after first try) is 1000μs.
+     *
+     * @throws \Exception
+     *
+     * @return mixed
+     */
+    protected function backoffOnExceptionCondition(callable $callable, array $args, $attempts, callable $condition, $wait = 1000)
+    {
+        try {
+
+            return $callable(...$args);
+
+        } catch (\Exception $e) {
+
+            if ($attempts > 1 && $condition($e)) {
+                usleep($wait);
+
+                return $this->backoffOnExceptionCondition($callable, $args, $attempts - 1, $condition, $this->increaseWaitTime($wait));
+            }
+
+            throw $e;
+        }
+    }
+
+    /**
      * @param int $wait Microseconds
      *
      * @return int
